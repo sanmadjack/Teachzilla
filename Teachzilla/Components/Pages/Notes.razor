@@ -1,0 +1,43 @@
+﻿@page "/notes"
+@rendermode InteractiveServer
+@inject DatabaseContext dbContext
+@using Microsoft.AspNetCore.Components.QuickGrid
+
+<PageTitle>Notes</PageTitle>
+
+<h1>Notes</h1>
+
+<div class="container">
+    @foreach (var note in notes)
+    {
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        @note.GenerateHeader()
+                    </div>
+                    <div class="card-body">
+                        <pre>@note.Text</pre>
+                    </div>
+                    <div class="card-footer">@note.GenerateFooter()</div>
+                </div>
+            </div>
+        </div>
+        <br/>
+    }
+</div>
+
+
+
+@code {
+    IQueryable<Note> notes;
+
+    protected override async Task OnInitializedAsync()
+    {
+        notes = dbContext.Notes
+            .Include(e => e.Lesson)
+            .Include(e=> e.Student)
+            .Include(e => e.Homework)
+            .OrderByDescending(e => e.Created);
+    }
+}

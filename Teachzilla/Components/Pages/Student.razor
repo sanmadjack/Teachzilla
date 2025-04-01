@@ -1,0 +1,126 @@
+﻿@page "/student/{id:Guid}"
+@rendermode InteractiveServer
+@inject DatabaseContext dbContext
+@using Microsoft.AspNetCore.Components.QuickGrid
+
+<PageTitle>Student</PageTitle>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h1>@student.Name</h1>
+                </div>
+                <div class="card-body">
+                    <table>
+                        <tr>
+                            <td>Phone</td>
+                            <td>@student.Phone</td>
+                        </tr>
+                        <tr>
+                            <td>Address</td>
+                            <td>@student.Address</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="card-footer"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<h1>Notes</h1>
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    New Note
+                </div>
+                <EditForm Model="noteEntity" OnSubmit="AddNote" Enhance>
+                    <div class="card-body">
+                        <div class="hstack gap-2">
+                            <InputTextArea @bind-Value="noteEntity.Text" class="form-control"></InputTextArea>
+                        </div>
+                    </div>
+                    <div class="card-footer"><button type="submit" class="btn btn-primary">Save</button></div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+    <br />
+    @foreach (var note in student.Notes.OrderByDescending(e => e.Created))
+    {
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <pre>@note.Text</pre>
+                    </div>
+                    <div class="card-footer">@note.GenerateFooter()</div>
+                </div>
+            </div>
+        </div>
+        <br/>
+    }
+</div>
+
+
+
+@code {
+    [Parameter]
+    public string id { get; set; }
+    Teachzilla.Model.Student student;
+
+    [SupplyParameterFromForm]
+    Teachzilla.Model.Note noteEntity { get; set; } = new();
+
+    private void RefreshData()
+    {
+        student = dbContext.Students
+            .Include(_ => _.Notes)
+            .Include(_ => _.Homework)
+            .Include(_ => _.Lessons)
+            .First(_ => _.ID == Guid.Parse(id));
+        StateHasChanged();
+
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Simulate asynchronous loading to demonstrate streaming rendering
+        RefreshData();
+
+    }
+
+    async Task AddNote()
+    {
+        var student = dbContext.Students.First(e => e.ID == this.student.ID);
+        // Update
+        if (noteEntity.ID != Guid.Empty)
+        {
+            // Update entity
+            noteEntity.Updated = DateTime.Now;
+            dbContext.SaveChanges();
+            noteEntity = new();
+            RefreshData();
+            return;
+        }
+
+        //Add
+
+        if (noteEntity.Text is null) return;
+        noteEntity.ID = Guid.NewGuid();
+        noteEntity.Created = DateTime.Now;
+        noteEntity.Updated = DateTime.Now;
+        noteEntity.Student = student;
+        dbContext.Notes.Add(noteEntity);
+        dbContext.SaveChanges();
+        noteEntity= new();
+        RefreshData();
+        return;
+    }
+}
