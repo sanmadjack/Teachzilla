@@ -10,8 +10,13 @@ builder.Services.AddRazorComponents()
 builder.Services.AddQuickGridEntityFrameworkAdapter();
 builder.Services.AddDbContext<DatabaseContext>((sp, e) =>
 {
-    var config = sp.GetRequiredService<IConfiguration>();
-    e.UseSqlite(config.GetConnectionString("Database"));
+    var connectionString = Environment.GetEnvironmentVariable("SQLITE_CONNECTION_STRING");
+    if(String.IsNullOrWhiteSpace(connectionString))
+    {
+        var config = sp.GetRequiredService<IConfiguration>();
+        connectionString = config.GetConnectionString("Database");
+    }
+    e.UseSqlite(connectionString);
 });
 
 var app = builder.Build();
