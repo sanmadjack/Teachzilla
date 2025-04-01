@@ -29,7 +29,7 @@ namespace Teachzilla.Model
 
             if (Student != null)
             {
-                elements.Add($"Student: {Student.Name}");
+                elements.Add($"Student: <a href='student/{Student.ID}'>{Student.Name}</a>");
             }
             if (Homework != null)
             {
