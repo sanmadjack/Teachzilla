@@ -43,7 +43,7 @@ namespace Teachzilla.Model.Migrations
 
                     b.HasIndex("StudentID");
 
-                    b.ToTable("Homework");
+                    b.ToTable("Homework", (string)null);
                 });
 
             modelBuilder.Entity("Teachzilla.Model.Lesson", b =>
@@ -68,7 +68,7 @@ namespace Teachzilla.Model.Migrations
 
                     b.HasIndex("StudentID");
 
-                    b.ToTable("Lessons");
+                    b.ToTable("Lessons", (string)null);
                 });
 
             modelBuilder.Entity("Teachzilla.Model.Note", b =>
@@ -104,7 +104,7 @@ namespace Teachzilla.Model.Migrations
 
                     b.HasIndex("StudentID");
 
-                    b.ToTable("Notes");
+                    b.ToTable("Notes", (string)null);
                 });
 
             modelBuilder.Entity("Teachzilla.Model.Student", b =>
@@ -133,7 +133,7 @@ namespace Teachzilla.Model.Migrations
 
                     b.HasKey("ID");
 
-                    b.ToTable("Students");
+                    b.ToTable("Students", (string)null);
                 });
 
             modelBuilder.Entity("Teachzilla.Model.Homework", b =>

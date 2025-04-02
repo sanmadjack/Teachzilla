@@ -4,13 +4,14 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Teachzilla.Model.Shared;
+using System.Web;
+using System.Net;
 
 namespace Teachzilla.Model
 {
-    public class Note
+    public class Note: AGuidEntity
     {
-        [Key]
-        public Guid ID { get; set; }
         public string Text { get; set; }
         public DateTimeOffset Created { get; set; }
         public DateTimeOffset Updated { get; set; }
@@ -22,18 +23,18 @@ namespace Teachzilla.Model
             this.Text = string.Empty;
         }
 
-        public string GenerateHeader()
+        public string GenerateHeader(bool skipStudent = false)
         {
             var elements = new List<string>();
 
 
-            if (Student != null)
+            if (!skipStudent && Student != null)
             {
-                elements.Add($"Student: <a href='student/{Student.ID}'>{Student.Name}</a>");
+                elements.Add($"Student: <a href='student/{Student.ID}'>{WebUtility.HtmlEncode(Student.Name)}</a>");
             }
             if (Homework != null)
             {
-                elements.Add($"Homework: {Homework.Description}");
+                elements.Add($"Homework: {WebUtility.HtmlEncode(Homework.Description)}");
             }
             if (Lesson != null)
             {

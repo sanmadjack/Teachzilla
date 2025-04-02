@@ -14,7 +14,18 @@
             <div class="col-md-12">
                 <div class="card">
                     <div class="card-header">
-                        @note.GenerateHeader()
+                        @if (note.Student != null)
+                        {
+                        <span>Student: <a href='student/@(note.Student.ID)'>@(note.Student.Name)</a></span>
+                        }
+                        @if (note.Homework != null)
+                        {
+                            <span>, Homework: <a href='homework/@(note.Homework.ID)'>@(note.Homework.Description)</a></span>
+                        }
+                        @if (note.Lesson != null)
+                        {
+                            <span>, Lesson: <a href='lesson/@(note.Lesson.ID)'>@(note.Lesson.LessonDate.ToLocalTime().DateTime.ToShortDateString())</a></span>
+                        }
                     </div>
                     <div class="card-body">
                         <pre>@note.Text</pre>
@@ -26,8 +37,6 @@
         <br/>
     }
 </div>
-
-
 
 @code {
     IQueryable<Note> notes;

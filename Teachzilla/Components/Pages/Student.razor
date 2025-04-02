@@ -1,28 +1,46 @@
-﻿@page "/student/{id:Guid}"
+﻿@page "/student/{id:Guid?}"
 @rendermode InteractiveServer
 @inject DatabaseContext dbContext
 @using Microsoft.AspNetCore.Components.QuickGrid
 
-<PageTitle>Student</PageTitle>
+<PageTitle>@PageTitle</PageTitle>
+
+<script>
+    function openTab(tabName) {
+    var i;
+    var x = document.getElementsByClassName("tabContents");
+    for (i = 0; i < x.length; i++) {
+    x[i].style.display = "none";
+    }
+    document.getElementById(tabName).style.display = "block";
+    }
+</script>
 
 <div class="container">
     <div class="row">
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header">
-                    <h1>@student.Name</h1>
+                    <h2>@PageTitle</h2>
                 </div>
                 <div class="card-body">
-                    <table>
-                        <tr>
-                            <td>Phone</td>
-                            <td>@student.Phone</td>
-                        </tr>
-                        <tr>
-                            <td>Address</td>
-                            <td>@student.Address</td>
-                        </tr>
-                    </table>
+                    <EditForm Model="student" OnSubmit="SaveStudent" Enhance>
+                        <div class="hstack gap-2">
+                            <label class="label-control">Name</label>
+                            <InputText @bind-Value="student.Name" class="form-control"></InputText>
+                        </div>
+                        <div class="hstack gap-2">
+                            <label class="label-control">Phone</label>
+                            <InputText @bind-Value="student.Phone" class="form-control"></InputText>
+                        </div>
+                        <div class="hstack gap-2">
+                            <label class="label-control">Address</label>
+                            <InputText @bind-Value="student.Address" class="form-control"></InputText>
+                        </div>
+                        <div class="hstack gap-2">
+                            <button type="submit" class="btn btn-primary">Save</button>
+                        </div>
+                    </EditForm>
                 </div>
                 <div class="card-footer"></div>
             </div>
@@ -30,60 +48,152 @@
     </div>
 </div>
 
-
-<h1>Notes</h1>
-<div class="container">
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header">
-                    New Note
+@if (!student.IsNew)
+{
+    <div class="w3-bar w3-black">
+        <button class="w3-bar-item w3-button" onclick="openTab('notes')">Notes</button>
+        <button class="w3-bar-item w3-button" onclick="openTab('lessons')">Lessons</button>
+        <button class="w3-bar-item w3-button" onclick="openTab('homework')">Homework</button>
+    </div>
+    <div id="notes" class="tabContents">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            New Note
+                        </div>
+                        <EditForm Model="noteEntity" OnSubmit="AddNote" Enhance>
+                            <div class="card-body">
+                                <div class="hstack gap-2">
+                                    <InputTextArea @bind-Value="noteEntity.Text" class="form-control"></InputTextArea>
+                                </div>
+                            </div>
+                            <div class="card-footer"><button type="submit" class="btn btn-primary">Save</button></div>
+                        </EditForm>
+                    </div>
                 </div>
-                <EditForm Model="noteEntity" OnSubmit="AddNote" Enhance>
-                    <div class="card-body">
-                        <div class="hstack gap-2">
-                            <InputTextArea @bind-Value="noteEntity.Text" class="form-control"></InputTextArea>
+            </div>
+            <br />
+            @foreach (var note in student.Notes.OrderByDescending(e => e.Created))
+            {
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header">
+                                @note.GenerateHeader(skipStudent: true)
+                            </div>
+                            <div class="card-body">
+                                <pre>@note.Text</pre>
+                            </div>
+                            <div class="card-footer">@note.GenerateFooter()</div>
                         </div>
                     </div>
-                    <div class="card-footer"><button type="submit" class="btn btn-primary">Save</button></div>
-                </EditForm>
+                </div>
+                <br/>
+            }
+        </div>
+    </div>
+    <div id="lessons" class="tabContents">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <a href="lesson/?studentId=@student.ID">Add Lesson</a>
+                        </div>
+                        <div class="card-body">
+                            <QuickGrid Items="@lessons" Pagination="lessonPagination">
+                                <TemplateColumn Title="Date" SortBy="@sortByLessonName" IsDefaultSortColumn="true">
+                                    <a href="lesson/@context.ID">@context.LessonDate.ToString()</a>
+                                </TemplateColumn>
+                                <TemplateColumn Title="Action">
+                                    <button @onclick="@(() => DeleteLesson(context))" class="btn btn-danger">Delete</button>
+                                </TemplateColumn>
+                            </QuickGrid>
+                        </div>
+                        <div class="card-footer"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    <br />
-    @foreach (var note in student.Notes.OrderByDescending(e => e.Created))
-    {
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-body">
-                        <pre>@note.Text</pre>
+    <div id="homework" class="tabContents">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <a href="homework/?studentId=@student.ID">Add Homework</a>
+                        </div>
+                        <div class="card-body">
+                            <QuickGrid Items="@homework" Pagination="homeworkPagination">
+                                <TemplateColumn Title="Description" SortBy="@sortByHomeworkDEscription" IsDefaultSortColumn="true">
+                                    <a href="homework/@context.ID">@context.Description</a>
+                                </TemplateColumn>
+                                <TemplateColumn Title="Action">
+                                    <button @onclick="@(() => DeleteHomework(context))" class="btn btn-danger">Delete</button>
+                                </TemplateColumn>
+                            </QuickGrid>
+                        </div>
+                        <div class="card-footer"></div>
                     </div>
-                    <div class="card-footer">@note.GenerateFooter()</div>
                 </div>
             </div>
         </div>
-        <br/>
-    }
-</div>
-
-
+    </div>
+}
 
 @code {
     [Parameter]
     public string id { get; set; }
     Teachzilla.Model.Student student;
 
+    IQueryable<Teachzilla.Model.Lesson> lessons;
+    IQueryable<Teachzilla.Model.Homework> homework;
+
     [SupplyParameterFromForm]
     Teachzilla.Model.Note noteEntity { get; set; } = new();
 
-    private void RefreshData()
+    PaginationState lessonPagination = new PaginationState { ItemsPerPage = 3 };
+    PaginationState homeworkPagination = new PaginationState { ItemsPerPage = 3 };
+    GridSort<Teachzilla.Model.Lesson> sortByLessonName = GridSort<Teachzilla.Model.Lesson>
+    .ByAscending(p => p.LessonDate);
+    GridSort<Teachzilla.Model.Homework> sortByHomeworkDEscription = GridSort<Teachzilla.Model.Homework>
+    .ByAscending(p => p.Description);
+
+
+    string PageTitle
     {
-        student = dbContext.Students
-            .Include(_ => _.Notes)
-            .Include(_ => _.Homework)
-            .Include(_ => _.Lessons)
-            .First(_ => _.ID == Guid.Parse(id));
+        get
+        {
+            if (student.IsNew)
+            {
+                return "New Student";
+            }
+            else
+            {
+                return student.Name;
+            }
+        }
+    }
+
+    private async Task RefreshData()
+    {
+        if(String.IsNullOrWhiteSpace(id))
+        {
+            student = new();
+        } else
+        {
+            student = await dbContext.Students
+                .Include(_ => _.Notes)
+                .Include(_ => _.Homework)
+                .Include(_ => _.Lessons)
+                .FirstAsync(_ => _.ID == Guid.Parse(id));
+            homework = dbContext.Homework.Where(e => e.Student == student);
+            lessons = dbContext.Lessons.Where(e => e.Student == student);
+
+        }
         StateHasChanged();
 
     }
@@ -92,35 +202,85 @@
     protected override async Task OnInitializedAsync()
     {
         // Simulate asynchronous loading to demonstrate streaming rendering
-        RefreshData();
+        await RefreshData();
 
     }
 
     async Task AddNote()
     {
-        var student = dbContext.Students.First(e => e.ID == this.student.ID);
+        var student = await dbContext.Students.FirstAsync(e => e.ID == this.student.ID);
         // Update
-        if (noteEntity.ID != Guid.Empty)
+        if (!noteEntity.IsNew)
         {
             // Update entity
-            noteEntity.Updated = DateTime.Now;
-            dbContext.SaveChanges();
-            noteEntity = new();
-            RefreshData();
+            noteEntity.Updated = DateTimeOffset.Now;
+            await dbContext.SaveChangesAsync();
+            await RefreshData();
             return;
         }
 
         //Add
 
-        if (noteEntity.Text is null) return;
-        noteEntity.ID = Guid.NewGuid();
-        noteEntity.Created = DateTime.Now;
-        noteEntity.Updated = DateTime.Now;
+        if (String.IsNullOrWhiteSpace(noteEntity.Text)) return;
+        noteEntity.SetGuid();
+        noteEntity.Created = DateTimeOffset.Now;
+        noteEntity.Updated = DateTimeOffset.Now;
         noteEntity.Student = student;
-        dbContext.Notes.Add(noteEntity);
-        dbContext.SaveChanges();
+        await dbContext.Notes.AddAsync(noteEntity);
+        await dbContext.SaveChangesAsync();
         noteEntity= new();
-        RefreshData();
+
+        await RefreshData();
+        return;
+    }
+
+    async Task DeleteLesson(Teachzilla.Model.Lesson incomingModel)
+    {
+        var entity = dbContext.Lessons.FirstOrDefault(_ => _.ID == incomingModel.ID);
+        if (entity != null)
+        {
+            dbContext.Lessons.Remove(entity);
+            dbContext.SaveChanges();
+        }
+        await RefreshData();
+    }
+    async Task DeleteHomework(Teachzilla.Model.Homework incomingModel)
+    {
+        var entity = dbContext.Homework.FirstOrDefault(_ => _.ID == incomingModel.ID);
+        if (entity != null)
+        {
+            dbContext.Homework.Remove(entity);
+            dbContext.SaveChanges();
+        }
+        await RefreshData();
+    }
+
+    async Task SaveStudent()
+    {
+        // Update
+        if (!student.IsNew)
+        {
+            var p = await dbContext.Students.FirstOrDefaultAsync(_ => _.ID == student.ID);
+            if (p is null) return;
+
+            // Update entity
+            student.Updated = DateTimeOffset.Now;
+            await dbContext.SaveChangesAsync();
+            await RefreshData();
+            return;
+        }
+
+        //Add
+
+        if (String.IsNullOrWhiteSpace(student.Name)) return;
+        student.SetGuid();
+        student.Created = DateTimeOffset.Now;
+        student.Updated = DateTimeOffset.Now;
+
+        await dbContext.Students.AddAsync(student);
+        await dbContext.SaveChangesAsync();
+        id = student.ID.ToString();
+        await RefreshData();
         return;
     }
 }

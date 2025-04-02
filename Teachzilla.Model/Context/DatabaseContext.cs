@@ -46,8 +46,8 @@ namespace Teachzilla.Model
 
             modelBuilder.Entity<Student>(_ =>
             {
-                _.HasMany(e => e.Lessons).WithOne(e => e.Student);
-                _.HasMany(e => e.Homework).WithOne(e => e.Student);
+                _.HasMany(e => e.Lessons).WithOne(e => e.Student).HasForeignKey(e=>e.StudentID);
+                _.HasMany(e => e.Homework).WithOne(e => e.Student).HasForeignKey(e=>e.StudentID);
                 _.HasMany(e => e.Notes).WithOne(e => e.Student).IsRequired(false);
             });
             modelBuilder.Entity<Lesson>(_ =>

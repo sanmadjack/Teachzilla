@@ -1,17 +1,16 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Teachzilla.Model.Shared;
 
 namespace Teachzilla.Model
 {
-    public class Student
+    public class Student: AGuidEntity
     {
-        [Key]
-        public Guid ID { get; set; }
         public string Name { get; set; }
         public string Phone { get; set; }
         public string Address { get; set; }
-        public ICollection<Homework> Homework{ get; }
-        public ICollection<Note> Notes { get; }
-        public ICollection<Lesson> Lessons{ get; }
+        public IList<Homework> Homework{ get; }
+        public IList<Note> Notes { get; }
+        public IList<Lesson> Lessons{ get; }
         public DateTimeOffset Created { get; set; }
         public DateTimeOffset Updated { get; set; }
 
@@ -19,6 +18,9 @@ namespace Teachzilla.Model
         {
             Phone = String.Empty;
             Address = String.Empty;
+            Homework = new List<Homework>();
+            Notes = new List<Note>();
+            Lessons = new List<Lesson>();
         }
     }
 }
